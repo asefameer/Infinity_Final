@@ -421,24 +421,26 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
           Towards infinite possibilities
         </motion.p>
 
-        {/* Hover prompt - scroll reveal */}
+        {/* Hover prompt - 3D depth from left */}
         <motion.p
           className="font-body text-xs tracking-[0.3em] text-muted-foreground/50 uppercase"
-          initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          style={{ perspective: 800, transformStyle: "preserve-3d" }}
+          initial={{ opacity: 0, x: -120, rotateY: 45, z: -100, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, x: 0, rotateY: 0, z: 0, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
+          transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           move cursor to reveal
         </motion.p>
 
-        {/* Sub-brands */}
+        {/* Sub-brands - 3D depth from left */}
         <motion.div
           className="flex items-center gap-6 mt-12"
-          initial={{ opacity: 0, y: 35, filter: "blur(10px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          style={{ perspective: 800, transformStyle: "preserve-3d" }}
+          initial={{ opacity: 0, x: -180, rotateY: 50, z: -150, filter: "blur(10px)" }}
+          whileInView={{ opacity: 1, x: 0, rotateY: 0, z: 0, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 1.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {["NOVA", "LIVE THE MOMENT", "XFORCE"].map((name, i) => (
             <span key={name} className="flex items-center gap-6">
@@ -453,13 +455,14 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
           ))}
         </motion.div>
 
-        {/* Editions & Encounter buttons */}
+        {/* Editions & Encounter buttons - 3D depth from left */}
         <motion.div
           className="flex items-center gap-5 mt-10"
-          initial={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(12px)" }}
-          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          style={{ perspective: 800, transformStyle: "preserve-3d" }}
+          initial={{ opacity: 0, x: -220, rotateY: 55, z: -200, scale: 0.9, filter: "blur(14px)" }}
+          whileInView={{ opacity: 1, x: 0, rotateY: 0, z: 0, scale: 1, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
+          transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {[
             { label: "EDITIONS", section: "editions", icon: "◆" },
