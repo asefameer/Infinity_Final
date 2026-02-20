@@ -7,6 +7,7 @@ import GrainOverlay from "@/components/GrainOverlay";
 import SmoothScroll from "@/components/SmoothScroll";
 import GlobalSparkles from "@/components/GlobalSparkles";
 import ScrollReveal from "@/components/ScrollReveal";
+import DefineStyleSection from "@/components/DefineStyleSection";
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -20,7 +21,7 @@ const Index = () => {
   // Track active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["ground-zero", "the-trinity", "editions", "encounter"];
+      const sections = ["ground-zero", "the-trinity", "define-style"];
       for (const id of sections) {
         const el = document.getElementById(id);
         if (el) {
@@ -62,29 +63,8 @@ const Index = () => {
               <TrinitySection />
             </div>
 
-            {/* Editions - back to dark */}
-            <section
-              id="editions"
-              className="min-h-screen flex items-center justify-center transition-colors duration-1000"
-              style={{ background: "hsl(var(--section-dark))" }}
-            >
-              <ScrollReveal className="text-center" offsetY={60} blur={10}>
-                <h2 className="font-display text-5xl font-bold text-foreground mb-4">Editions</h2>
-                <p className="text-muted-foreground">E-commerce store coming soon</p>
-              </ScrollReveal>
-            </section>
-
-            {/* Encounter - lighter */}
-            <section
-              id="encounter"
-              className="min-h-screen flex items-center justify-center transition-colors duration-1000"
-              style={{ background: "hsl(var(--section-light))" }}
-            >
-              <ScrollReveal className="text-center" offsetY={60} blur={10}>
-                <h2 className="font-display text-5xl font-bold text-foreground mb-4">Encounter</h2>
-                <p className="text-muted-foreground">Event ticketing coming soon</p>
-              </ScrollReveal>
-            </section>
+            {/* Define Your Style */}
+            <DefineStyleSection />
           </>
         )}
       </div>
