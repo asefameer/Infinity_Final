@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import heroVideo from "@/assets/infinity-logo-video.mp4";
-import heroCrystal from "@/assets/hero-crystal.jpg";
 import WebGLDistortion from "@/components/WebGLDistortion";
 
 interface HeroSectionProps {
@@ -100,34 +99,8 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
         />
       </motion.div>
 
-      {/* SVG Masked crystal image overlay — middle parallax layer */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ x: layer2X, y: layer2Y }}
-      >
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <mask id="hero-mask">
-              <rect width="100%" height="100%" fill="black" />
-              {/* Organic blob shape mask */}
-              <ellipse cx="960" cy="540" rx="420" ry="350" fill="white" opacity="0.6">
-                <animate attributeName="rx" values="420;440;420" dur="6s" repeatCount="indefinite" />
-                <animate attributeName="ry" values="350;370;350" dur="8s" repeatCount="indefinite" />
-              </ellipse>
-              <ellipse cx="1050" cy="480" rx="280" ry="220" fill="white" opacity="0.3">
-                <animate attributeName="cx" values="1050;1070;1050" dur="7s" repeatCount="indefinite" />
-              </ellipse>
-            </mask>
-          </defs>
-          <image
-            href={heroCrystal}
-            width="1920"
-            height="1080"
-            mask="url(#hero-mask)"
-            opacity="0.2"
-          />
-        </svg>
-      </motion.div>
+
+
 
       {/* Subtle bottom + top fade for readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background/80" />
