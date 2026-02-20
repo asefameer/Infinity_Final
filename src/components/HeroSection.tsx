@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, useScroll } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import heroVideo from "@/assets/infinity-logo-video.mp4";
 
@@ -7,42 +7,54 @@ interface HeroSectionProps {
   onNavigate: (section: string) => void;
 }
 
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+}
+
+let particleId = 0;
+
 const HeroSection = ({ onNavigate }: HeroSectionProps) => {
   const [scrolled, setScrolled] = useState(false);
+  const [particles, setParticles] = useState<Particle[]>([]);
   const sectionRef = useRef<HTMLElement>(null);
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
-
-  // Cursor-reactive transforms
-  const bgX = useTransform(mouseX, [0, 1], [-15, 15]);
-  const bgY = useTransform(mouseY, [0, 1], [-15, 15]);
-  const glowX = useTransform(mouseX, [0, 1], ["0%", "100%"]);
-  const glowY = useTransform(mouseY, [0, 1], ["0%", "100%"]);
-  const rotateX = useTransform(mouseY, [0, 1], [3, -3]);
-  const rotateY = useTransform(mouseX, [0, 1], [-3, 3]);
+  const lastSpawn = useRef(0);
 
   // Scroll-based parallax zoom
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
-  const scrollScale = useTransform(scrollYProgress, [0, 1], [1.08, 1.35]);
+  const scrollScale = useTransform(scrollYProgress, [0, 1], [1.02, 1.25]);
   const scrollOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 100);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 100);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  // Remove particles after animation
+  useEffect(() => {
+    if (particles.length === 0) return;
+    const timer = setTimeout(() => {
+      setParticles((prev) => prev.slice(1));
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [particles]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastSpawn.current < 60) return; // throttle
+    lastSpawn.current = now;
     if (!sectionRef.current) return;
     const rect = sectionRef.current.getBoundingClientRect();
-    mouseX.set((e.clientX - rect.left) / rect.width);
-    mouseY.set((e.clientY - rect.top) / rect.height);
-  };
+    setParticles((prev) => [
+      ...prev.slice(-20), // cap at 20
+      { id: particleId++, x: e.clientX - rect.left, y: e.clientY - rect.top },
+    ]);
+  }, []);
 
   return (
     <section
@@ -51,8 +63,8 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
       onMouseMove={handleMouseMove}
     >
-      {/* Video Background with cursor parallax */}
-      <motion.div className="absolute inset-0" style={{ x: bgX, y: bgY, scale: scrollScale }}>
+      {/* Video Background — no movement, just scroll zoom */}
+      <motion.div className="absolute inset-0" style={{ scale: scrollScale }}>
         <video
           autoPlay
           muted
@@ -63,37 +75,33 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
         </video>
       </motion.div>
 
-      {/* Subtle bottom fade only for text readability */}
+      {/* Subtle bottom fade for readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
 
-      {/* Cursor-reactive color shift overlay */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none mix-blend-color"
-        style={{
-          background: useTransform(
-            [glowX, glowY],
-            ([x, y]) =>
-              `radial-gradient(800px circle at ${x} ${y}, hsl(174 72% 56% / 0.35), transparent 50%), radial-gradient(600px circle at ${x} ${y}, hsl(280 60% 60% / 0.25), transparent 60%)`
-          ),
-        }}
-      />
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: useTransform(
-            [glowX, glowY],
-            ([x, y]) =>
-              `radial-gradient(500px circle at ${x} ${y}, hsl(330 70% 55% / 0.08), transparent 50%)`
-          ),
-        }}
-      />
+      {/* Particle trail */}
+      <div className="absolute inset-0 pointer-events-none z-20">
+        {particles.map((p) => (
+          <motion.div
+            key={p.id}
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              left: p.x,
+              top: p.y,
+              background: "radial-gradient(circle, hsl(174 72% 70%), hsl(280 60% 65%))",
+              boxShadow: "0 0 8px hsl(174 72% 56% / 0.6), 0 0 20px hsl(280 60% 60% / 0.3)",
+            }}
+            initial={{ opacity: 1, scale: 1, y: 0 }}
+            animate={{ opacity: 0, scale: 0, y: -30 + Math.random() * -20, x: (Math.random() - 0.5) * 40 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
+        ))}
+      </div>
 
-      {/* Content with subtle 3D tilt + scroll fade */}
+      {/* Content with scroll fade */}
       <motion.div
         className="relative z-10 flex flex-col items-center text-center px-4 pt-20"
-        style={{ rotateX, rotateY, perspective: 1200, opacity: scrollOpacity }}
+        style={{ opacity: scrollOpacity }}
       >
-
         <motion.p
           className="font-body text-lg md:text-xl tracking-[0.4em] text-muted-foreground mt-4"
           initial={{ opacity: 0 }}
