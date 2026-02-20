@@ -1,8 +1,12 @@
 import { motion } from "framer-motion";
+import { useRef } from "react";
+import { useScroll, useTransform, useSpring } from "framer-motion";
 import ScrollReveal from "@/components/ScrollReveal";
 import trinityNova from "@/assets/trinity-nova.jpg";
 import trinityLtm from "@/assets/trinity-live-the-moment.jpg";
 import trinityXforce from "@/assets/trinity-xforce.jpg";
+
+const springConfig = { stiffness: 60, damping: 18, mass: 0.6 };
 
 const cards = [
   {
@@ -25,6 +29,34 @@ const cards = [
   },
 ];
 
+/** Image with parallax depth — image moves slower than scroll */
+const ParallaxImage = ({ src, alt }: { src: string; alt: string }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["0 1", "1 0"],
+  });
+  const smoothProgress = useSpring(scrollYProgress, springConfig);
+  const y = useTransform(smoothProgress, [0, 1], ["-15%", "15%"]);
+  const scale = useTransform(smoothProgress, [0, 0.5, 1], [1.1, 1.05, 1.1]);
+
+  return (
+    <div ref={ref} className="relative aspect-[3/4] rounded-lg overflow-hidden mb-5">
+      <motion.img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        style={{
+          y,
+          scale,
+          willChange: "transform",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent pointer-events-none" />
+    </div>
+  );
+};
+
 const TrinitySection = () => {
   return (
     <section
@@ -43,25 +75,15 @@ const TrinitySection = () => {
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full">
-        {cards.map((card, index) => (
+        {cards.map((card) => (
           <ScrollReveal
             key={card.title}
             className="group cursor-pointer"
             offsetY={80}
             blur={10}
-            startOffset={`${index * 0.02} 1`}
           >
-            {/* Image */}
-            <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-5">
-              <img
-                src={card.image}
-                alt={card.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-            </div>
+            <ParallaxImage src={card.image} alt={card.title} />
 
-            {/* Text */}
             <h3 className="font-display text-xl font-bold text-foreground mb-2 tracking-wide">
               {card.title}
             </h3>
