@@ -11,8 +11,7 @@ interface NavbarProps {
 const navItems = [
   { id: "ground-zero", label: "Ground Zero" },
   { id: "the-trinity", label: "The Trinity", dropdown: ["Nova", "Live the Moment", "X-Force"] },
-  { id: "editions", label: "Editions" },
-  { id: "encounter", label: "Encounter" },
+  { id: "define-style", label: "Define Your Style" },
 ];
 
 const Navbar = ({ activeSection, onNavigate }: NavbarProps) => {
