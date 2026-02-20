@@ -1,7 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import WebGLDistortion from "@/components/WebGLDistortion";
-import infinityVideo from "@/assets/infinity-logo-video.mp4";
 
 interface HeroSectionProps {
   onNavigate: (section: string) => void;
@@ -315,13 +313,8 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {/* ── Layer 0: WebGL distortion background ── */}
-      <div className="absolute inset-0 opacity-20">
-        <WebGLDistortion videoSrc={infinityVideo} />
-      </div>
-
-      {/* ── Layer 0b: Dark overlay ── */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/70 to-card/80" />
+      {/* ── Layer 0: Deep background gradient ── */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card" />
 
       {/* ── Layer 1: Floating particles ── */}
       <motion.div
