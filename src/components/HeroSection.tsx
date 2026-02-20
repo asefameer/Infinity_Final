@@ -432,20 +432,6 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
         </motion.p>
       </div>
 
-      {/* ── Custom cursor dot ── */}
-      {isHovering && (
-        <motion.div
-          className="fixed z-50 pointer-events-none mix-blend-difference"
-          style={{
-            left: pixelMouse.x,
-            top: pixelMouse.y,
-            x: "-50%",
-            y: "-50%",
-          }}
-        >
-          <div className="w-4 h-4 rounded-full bg-foreground" />
-        </motion.div>
-      )}
 
       {/* ── Scroll indicator ── */}
       <motion.div
