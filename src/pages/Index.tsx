@@ -6,6 +6,7 @@ import TrinitySection from "@/components/TrinitySection";
 import MagneticCursor from "@/components/MagneticCursor";
 import GrainOverlay from "@/components/GrainOverlay";
 import SmoothScroll from "@/components/SmoothScroll";
+import GlobalSparkles from "@/components/GlobalSparkles";
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -50,6 +51,7 @@ const Index = () => {
           <>
             <MagneticCursor />
             <GrainOverlay />
+            <GlobalSparkles />
             <Navbar activeSection={activeSection} onNavigate={handleNavigate} />
             <HeroSection onNavigate={handleNavigate} />
             <TrinitySection />
