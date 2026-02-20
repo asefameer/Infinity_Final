@@ -42,8 +42,8 @@ const InfinityCanvas = ({
 
       const cx = w / 2;
       const cy = h / 2;
-      const scaleX = Math.min(w * 0.32, 380);
-      const scaleY = Math.min(h * 0.38, 340);
+      const scaleX = Math.min(w * 0.42, 500);
+      const scaleY = Math.min(h * 0.45, 420);
 
       // Mouse influence on the infinity shape
       const mx = (mouseX - 0.5) * 30;
