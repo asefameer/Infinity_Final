@@ -437,9 +437,9 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
         <motion.div
           className="flex items-center gap-6 mt-12"
           style={{ perspective: 800, transformStyle: "preserve-3d" }}
-          initial={{ opacity: 0, x: -180, rotateY: 50, z: -150, filter: "blur(10px)" }}
+          initial={{ opacity: 0, x: -180, rotateY: 50, z: -150, filter: "blur(16px)" }}
           whileInView={{ opacity: 1, x: 0, rotateY: 0, z: 0, filter: "blur(0px)" }}
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: 1 }}
           transition={{ duration: 1.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {["NOVA", "LIVE THE MOMENT", "XFORCE"].map((name, i) => (
@@ -459,9 +459,9 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
         <motion.div
           className="flex items-center gap-5 mt-10"
           style={{ perspective: 800, transformStyle: "preserve-3d" }}
-          initial={{ opacity: 0, x: -220, rotateY: 55, z: -200, scale: 0.9, filter: "blur(14px)" }}
+          initial={{ opacity: 0, x: -220, rotateY: 55, z: -200, scale: 0.9, filter: "blur(20px)" }}
           whileInView={{ opacity: 1, x: 0, rotateY: 0, z: 0, scale: 1, filter: "blur(0px)" }}
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: 1 }}
           transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           {[
