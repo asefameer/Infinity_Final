@@ -117,12 +117,11 @@ const UnifiedHeroCanvas = ({
 
       // ── Draw infinity path layers ──
       const layers = [
-        { offset: 0, alpha: 0.08, width: 120, blur: 60 },
-        { offset: 0.1, alpha: 0.12, width: 80, blur: 40 },
-        { offset: 0.2, alpha: 0.2, width: 50, blur: 25 },
-        { offset: 0.3, alpha: 0.35, width: 20, blur: 12 },
-        { offset: 0.35, alpha: 0.6, width: 8, blur: 4 },
-        { offset: 0.4, alpha: 1, width: 3, blur: 0 },
+        { offset: 0, alpha: 0.06, width: 80, blur: 35 },
+        { offset: 0.15, alpha: 0.15, width: 40, blur: 18 },
+        { offset: 0.3, alpha: 0.35, width: 14, blur: 6 },
+        { offset: 0.38, alpha: 0.7, width: 5, blur: 2 },
+        { offset: 0.42, alpha: 1, width: 2.5, blur: 0 },
       ];
 
       for (const layer of layers) {
@@ -135,10 +134,10 @@ const UnifiedHeroCanvas = ({
         const hue2 = (hue1 + 60) % 360;
         const hue3 = (hue1 + 180) % 360;
         const hue4 = (hue1 + 270) % 360;
-        grad.addColorStop(0, `hsl(${hue1}, 85%, 65%)`);
-        grad.addColorStop(0.3, `hsl(${hue2}, 90%, 60%)`);
-        grad.addColorStop(0.6, `hsl(${hue3}, 85%, 65%)`);
-        grad.addColorStop(1, `hsl(${hue4}, 90%, 60%)`);
+        grad.addColorStop(0, `hsl(${hue1}, 90%, 70%)`);
+        grad.addColorStop(0.3, `hsl(${hue2}, 95%, 65%)`);
+        grad.addColorStop(0.6, `hsl(${hue3}, 90%, 70%)`);
+        grad.addColorStop(1, `hsl(${hue4}, 95%, 65%)`);
 
         ctx.strokeStyle = grad;
         ctx.lineWidth = layer.width;

@@ -15,7 +15,7 @@ const GrainOverlay = () => {
     // Pre-generate a single noise tile once
     const tile = ctx.createImageData(TILE_SIZE, TILE_SIZE);
     const data = tile.data;
-    const intensity = Math.round(0.03 * 255);
+    const intensity = Math.round(0.018 * 255);
     for (let i = 0; i < data.length; i += 4) {
       const noise = Math.random() * 255;
       data[i] = noise;
