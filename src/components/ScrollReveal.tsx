@@ -1,5 +1,5 @@
 import { useRef, ReactNode } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 interface ScrollRevealProps {
   children: ReactNode;
@@ -9,15 +9,12 @@ interface ScrollRevealProps {
   rotateY?: number;
   scale?: number;
   blur?: number;
-  /** Where in the viewport the animation starts/ends. Default: element bottom crosses viewport bottom → element top crosses viewport center */
   startOffset?: string;
   endOffset?: string;
 }
 
-/**
- * Scroll-synced reveal: continuously scrubs opacity, translateY, etc.
- * based on scroll position. Fully reversible on scroll up.
- */
+const springConfig = { stiffness: 80, damping: 20, mass: 0.8 };
+
 const ScrollReveal = ({
   children,
   className = "",
@@ -26,8 +23,8 @@ const ScrollReveal = ({
   rotateY = 0,
   scale = 1,
   blur = 0,
-  startOffset = "0 1",    // element top at viewport bottom
-  endOffset = "0 0.6",    // element top at 60% of viewport
+  startOffset = "0 1",
+  endOffset = "0 0.65",
 }: ScrollRevealProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -36,12 +33,15 @@ const ScrollReveal = ({
     offset: [startOffset as any, endOffset as any],
   });
 
-  const opacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const y = useTransform(scrollYProgress, [0, 1], [offsetY, 0]);
-  const x = useTransform(scrollYProgress, [0, 1], [offsetX, 0]);
-  const rY = useTransform(scrollYProgress, [0, 1], [rotateY, 0]);
-  const s = useTransform(scrollYProgress, [0, 1], [scale, 1]);
-  const blurVal = useTransform(scrollYProgress, [0, 1], [blur, 0]);
+  // Smooth spring-based scrub for buttery transitions
+  const smoothProgress = useSpring(scrollYProgress, springConfig);
+
+  const opacity = useTransform(smoothProgress, [0, 1], [0, 1]);
+  const y = useTransform(smoothProgress, [0, 1], [offsetY, 0]);
+  const x = useTransform(smoothProgress, [0, 1], [offsetX, 0]);
+  const rY = useTransform(smoothProgress, [0, 1], [rotateY, 0]);
+  const s = useTransform(smoothProgress, [0, 1], [scale, 1]);
+  const blurVal = useTransform(smoothProgress, [0, 1], [blur, 0]);
   const filterStr = useTransform(blurVal, (v) => `blur(${v}px)`);
 
   return (
@@ -57,6 +57,7 @@ const ScrollReveal = ({
         filter: filterStr,
         perspective: rotateY ? 800 : undefined,
         transformStyle: rotateY ? "preserve-3d" : undefined,
+        willChange: "transform, opacity, filter",
       }}
     >
       {children}
