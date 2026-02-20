@@ -49,19 +49,20 @@ const OverlayCard = ({
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["0 1", "0.7 0.5"],
+    offset: ["start end", "end start"],
   });
   const smoothProgress = useSpring(scrollYProgress, springConfig);
 
-  // Image2 opacity: fades in as you scroll
-  const overlayOpacity = useTransform(smoothProgress, [0.3, 1], [0, 1]);
+  // Image2 opacity: fades in during the middle portion of scroll (when card is on screen)
+  const overlayOpacity = useTransform(smoothProgress, [0.25, 0.55], [0, 1]);
 
   // Subtle parallax on base image
-  const y1 = useTransform(smoothProgress, [0, 1], ["-8%", "8%"]);
-  const scale1 = useTransform(smoothProgress, [0, 0.5, 1], [1.08, 1.04, 1.08]);
+  const y1 = useTransform(smoothProgress, [0, 1], ["-10%", "10%"]);
+  const scale1 = useTransform(smoothProgress, [0, 0.5, 1], [1.1, 1.0, 1.1]);
 
-  // Image2 slides up slightly as it appears
-  const y2 = useTransform(smoothProgress, [0.3, 1], ["6%", "0%"]);
+  // Image2 scales up subtly as it appears + slides up
+  const y2 = useTransform(smoothProgress, [0.25, 0.55], ["4%", "0%"]);
+  const scale2 = useTransform(smoothProgress, [0.25, 0.55], [1.05, 1.0]);
 
   return (
     <div ref={ref} className="relative aspect-[3/4] rounded-lg overflow-hidden mb-5">
@@ -78,7 +79,7 @@ const OverlayCard = ({
         src={image2}
         alt={`${alt} overlay`}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: overlayOpacity, y: y2, willChange: "transform, opacity" }}
+        style={{ opacity: overlayOpacity, y: y2, scale: scale2, willChange: "transform, opacity" }}
       />
 
       {/* Bottom gradient */}
