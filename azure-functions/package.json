@@ -1,0 +1,18 @@
+{
+  "name": "infinity-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "func start",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "mssql": "^11.0.1"
+  },
+  "devDependencies": {
+    "@azure/functions": "^4.6.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^20.0.0"
+  }
+}
