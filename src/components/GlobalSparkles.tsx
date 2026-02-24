@@ -37,24 +37,29 @@ const GlobalSparkles = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", { alpha: true })!;
     let w = 0, h = 0;
 
     const resize = () => {
+      // Use half-resolution for performance
+      const dpr = Math.min(window.devicePixelRatio, 1);
       w = window.innerWidth;
       h = window.innerHeight;
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener("resize", resize);
 
-    // Initialize ambient stars in viewport space
+    // Initialize ambient stars
     if (starsRef.current.length === 0) {
       for (let i = 0; i < AMBIENT_COUNT; i++) {
         starsRef.current.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
           vx: (Math.random() - 0.5) * 0.12,
           vy: (Math.random() - 0.5) * 0.08,
           size: Math.random() * 1.8 + 0.5,
@@ -66,12 +71,21 @@ const GlobalSparkles = () => {
       }
     }
 
-    const draw = () => {
-      timeRef.current += 0.016;
+    let lastFrame = 0;
+    const FRAME_INTERVAL = 1000 / 30; // Cap at 30fps
+
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+
+      // Throttle to 30fps
+      if (now - lastFrame < FRAME_INTERVAL) return;
+      lastFrame = now;
+
+      timeRef.current += 0.032; // ~30fps timestep
       const t = timeRef.current;
       ctx.clearRect(0, 0, w, h);
 
-      // ── Ambient sparkles (viewport-relative) ──
+      // ── Ambient sparkles — NO shadowBlur for performance ──
       for (const s of starsRef.current) {
         s.x += s.vx;
         s.y += s.vy;
@@ -83,19 +97,24 @@ const GlobalSparkles = () => {
 
         const twinkle = Math.sin(t * s.twinkleSpeed + s.twinklePhase) * 0.5 + 0.5;
         const alpha = s.alpha * twinkle;
-        if (alpha < 0.02) continue; // skip nearly invisible stars
+        if (alpha < 0.03) continue;
 
-        ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = `hsl(${s.hue}, 80%, 75%)`;
-        ctx.shadowColor = `hsl(${s.hue}, 90%, 70%)`;
-        ctx.shadowBlur = s.size * 3;
 
+        // Main dot
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size * 0.6, 0, Math.PI * 2);
         ctx.fill();
 
+        // Soft glow via larger, semi-transparent circle (replaces shadowBlur)
+        ctx.globalAlpha = alpha * 0.2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
         // Cross rays
+        ctx.globalAlpha = alpha * 0.6;
         const rayLen = s.size * 2 * twinkle;
         ctx.strokeStyle = `hsl(${s.hue}, 80%, 75%)`;
         ctx.lineWidth = s.size * 0.2;
@@ -105,11 +124,9 @@ const GlobalSparkles = () => {
         ctx.moveTo(s.x, s.y - rayLen);
         ctx.lineTo(s.x, s.y + rayLen);
         ctx.stroke();
-
-        ctx.restore();
       }
 
-      // ── Shooting stars ──
+      // ── Shooting stars — simplified, no shadowBlur ──
       if (shootingRef.current.length < MAX_SHOOTING && Math.random() < 0.002) {
         const startX = Math.random() * w;
         const startY = Math.random() * h * 0.3;
@@ -135,35 +152,33 @@ const GlobalSparkles = () => {
         ss.vy += 0.03;
 
         ss.trail.push({ x: ss.x, y: ss.y, alpha: ss.life });
-        if (ss.trail.length > 20) ss.trail.shift();
+        if (ss.trail.length > 15) ss.trail.shift();
 
         for (let i = 0; i < ss.trail.length; i++) {
           const tp = ss.trail[i];
           const progress = i / ss.trail.length;
-          ctx.save();
           ctx.globalAlpha = tp.alpha * progress * 0.5;
           ctx.fillStyle = `hsl(${ss.hue}, 85%, 75%)`;
-          ctx.shadowBlur = 6 * progress;
-          ctx.shadowColor = `hsl(${ss.hue}, 90%, 70%)`;
           ctx.beginPath();
           ctx.arc(tp.x, tp.y, ss.size * progress, 0, Math.PI * 2);
           ctx.fill();
-          ctx.restore();
         }
 
-        ctx.save();
+        // Head glow via larger circle
         ctx.globalAlpha = ss.life;
         ctx.fillStyle = `hsl(${ss.hue}, 90%, 85%)`;
-        ctx.shadowColor = `hsl(${ss.hue}, 100%, 80%)`;
-        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.arc(ss.x, ss.y, ss.size * 1.2, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
+        ctx.globalAlpha = ss.life * 0.3;
+        ctx.beginPath();
+        ctx.arc(ss.x, ss.y, ss.size * 3, 0, Math.PI * 2);
+        ctx.fill();
 
         return ss.life > 0 && ss.y < h + 50;
       });
 
+      ctx.globalAlpha = 1;
       animRef.current = requestAnimationFrame(draw);
     };
 
