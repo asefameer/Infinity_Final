@@ -118,7 +118,7 @@ const UnifiedHeroCanvas = ({
       // ── Helper: build infinity path points ──
       const buildPath = (offset: number): { x: number; y: number }[] => {
         const pts: { x: number; y: number }[] = [];
-        const steps = 120; // reduced from 200
+        const steps = 150; // Restore step count for smoothness
         const phase = t * 0.5 + offset;
         for (let i = 0; i <= steps; i++) {
           const angle = (i / steps) * Math.PI * 2;
@@ -136,12 +136,7 @@ const UnifiedHeroCanvas = ({
         return pts;
       };
 
-      const strokePath = (pts: { x: number; y: number }[], style: string | CanvasGradient, lineWidth: number, alpha: number) => {
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = style;
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+      const strokePath = (pts: { x: number; y: number }[]) => {
         ctx.beginPath();
         for (let i = 0; i < pts.length; i++) {
           if (i === 0) ctx.moveTo(pts[i].x, pts[i].y);
@@ -150,35 +145,42 @@ const UnifiedHeroCanvas = ({
         ctx.stroke();
       };
 
-      // ── Draw infinity path layers using multi-pass glow (no ctx.filter) ──
-      const layers = [
-        { offset: 0, alpha: 0.06, width: 80 },
-        { offset: 0.15, alpha: 0.15, width: 40 },
-        { offset: 0.3, alpha: 0.35, width: 14 },
-        { offset: 0.38, alpha: 0.7, width: 5 },
-        { offset: 0.42, alpha: 1, width: 2.5 },
-      ];
+      // ── Draw infinity path with smooth glow (using shadowBlur) ──
+      const pts = buildPath(0);
+      
+      // Dynamic gradient
+      const hue1 = (t * 40) % 360;
+      const hue2 = (hue1 + 60) % 360;
+      const hue3 = (hue1 + 180) % 360;
+      const hue4 = (hue1 + 270) % 360;
+      const grad = ctx.createLinearGradient(cx - scaleX, cy, cx + scaleX, cy);
+      grad.addColorStop(0, `hsl(${hue1}, 90%, 70%)`);
+      grad.addColorStop(0.3, `hsl(${hue2}, 95%, 65%)`);
+      grad.addColorStop(0.6, `hsl(${hue3}, 90%, 70%)`);
+      grad.addColorStop(1, `hsl(${hue4}, 95%, 65%)`);
 
-      for (const layer of layers) {
-        const pts = buildPath(layer.offset);
-        const hue1 = (t * 40 + layer.offset * 360) % 360;
-        const hue2 = (hue1 + 60) % 360;
-        const hue3 = (hue1 + 180) % 360;
-        const hue4 = (hue1 + 270) % 360;
-        const grad = ctx.createLinearGradient(cx - scaleX, cy, cx + scaleX, cy);
-        grad.addColorStop(0, `hsl(${hue1}, 90%, 70%)`);
-        grad.addColorStop(0.3, `hsl(${hue2}, 95%, 65%)`);
-        grad.addColorStop(0.6, `hsl(${hue3}, 90%, 70%)`);
-        grad.addColorStop(1, `hsl(${hue4}, 95%, 65%)`);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
-        // Simulate glow with wider, dimmer passes
-        if (layer.width >= 14) {
-          strokePath(pts, grad, layer.width * 2, layer.alpha * 0.15);
-          strokePath(pts, grad, layer.width * 1.4, layer.alpha * 0.3);
-        }
-        strokePath(pts, grad, layer.width, layer.alpha);
-      }
-      ctx.globalAlpha = 1;
+      // Pass 1: Outer soft glow
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.shadowColor = `hsl(${hue1}, 80%, 60%)`;
+      ctx.shadowBlur = 40;
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 15;
+      strokePath(pts);
+      ctx.restore();
+
+      // Pass 2: Inner core + tight glow
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.shadowColor = `hsl(${hue3}, 90%, 70%)`;
+      ctx.shadowBlur = 10;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      strokePath(pts);
+      ctx.restore();
 
       // ── Check if mouse is near infinity path ──
       const mousePixelX = mouse.x * w;
@@ -245,30 +247,30 @@ const UnifiedHeroCanvas = ({
         }
       }
 
-      // ── Draw all particles — no shadowBlur for performance ──
+      // ── Draw all particles — restored shadowBlur for nice glow ──
       for (const p of particlesRef.current) {
         p.hue = (p.hue + 0.3) % 360;
 
         if (p.mode === "path") {
+          // Move along infinity path
           p.pathAngle += 0.02;
           const pos = getInfinityPos(p.pathAngle + t * 1.5, t, cx, cy, scaleX, scaleY);
           p.x = pos.x;
           p.y = pos.y;
 
           const alpha = 0.4 + Math.sin(t * 2 + p.pathAngle * 3) * 0.3;
-          const color = `hsl(${p.hue}, 90%, 70%)`;
-          // Glow via larger circle
-          ctx.globalAlpha = alpha * 0.2;
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-          ctx.fill();
-          // Core
+          ctx.save();
           ctx.globalAlpha = alpha;
+          ctx.fillStyle = `hsl(${p.hue}, 90%, 70%)`;
+          ctx.shadowColor = `hsl(${p.hue}, 90%, 70%)`;
+          ctx.shadowBlur = 12; // Nice glow
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
         } else {
+          // Free floating particle
+          // Mouse repulsion
           const dx = p.x / w - mouse.x;
           const dy = p.y / h - mouse.y;
           const dist = Math.hypot(dx, dy);
@@ -285,26 +287,23 @@ const UnifiedHeroCanvas = ({
           p.life = (Math.sin(t * 10 + p.hue * 0.01) + 1) / 2;
           if (p.throwTimer > 0) p.throwTimer--;
 
+          // Wrap around
           if (p.x < 0) p.x = w;
           if (p.x > w) p.x = 0;
           if (p.y < 0) p.y = h;
           if (p.y > h) p.y = 0;
 
-          const color = `hsl(${p.hue}, 80%, 65%)`;
-          // Glow
-          ctx.globalAlpha = (0.3 + p.life * 0.4) * 0.2;
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          // Core
+          ctx.save();
           ctx.globalAlpha = 0.3 + p.life * 0.4;
+          ctx.fillStyle = `hsl(${p.hue}, 80%, 65%)`;
+          ctx.shadowColor = `hsl(${p.hue}, 80%, 65%)`;
+          ctx.shadowBlur = 8;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
         }
       }
-      ctx.globalAlpha = 1;
 
       animRef.current = requestAnimationFrame(draw);
     };
@@ -493,65 +492,27 @@ const HeroSection = ({ onNavigate }: HeroSectionProps) => {
       {/* Editions & Encounter buttons - scroll-synced 3D from left */}
       <ScrollReveal
         className="flex items-center gap-5 mt-10"
-        offsetY={80}
-        offsetX={-160}
-        rotateY={50}
-        blur={20}
-        scale={0.9}
+        offsetY={60}
+        offsetX={-120}
+        rotateY={40}
+        blur={16}
       >
-        {[
-          { label: "EDITIONS", section: "editions", icon: "◆" },
-          { label: "ENCOUNTER", section: "encounter", icon: "✦" },
-        ].map(({ label, section, icon }) => (
-          <MagneticButton key={section} className="group" strength={0.35}>
-            <motion.button
-              onClick={() => {
-                const el = document.getElementById(section);
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="relative px-8 py-3 rounded-full overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <span
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "linear-gradient(135deg, hsl(var(--infinity-cyan)), hsl(var(--infinity-purple)), hsl(var(--infinity-pink)), hsl(var(--infinity-cyan)))",
-                  backgroundSize: "300% 300%",
-                  animation: "gradient-shift 4s ease infinite",
-                }}
-              />
-              <span
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{
-                  background: "linear-gradient(135deg, hsl(var(--infinity-cyan)), hsl(var(--infinity-purple)), hsl(var(--infinity-pink)), hsl(var(--infinity-cyan)))",
-                  backgroundSize: "300% 300%",
-                  animation: "gradient-shift 4s ease infinite",
-                  filter: "blur(10px)",
-                }}
-              />
-              <span
-                className="absolute inset-[1.5px] rounded-full transition-all duration-300 group-hover:inset-[2px]"
-                style={{ background: "hsl(var(--background) / 0.88)" }}
-              />
-              <span className="relative z-10 flex items-center gap-2.5">
-                <span
-                  className="text-xs opacity-60 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(var(--infinity-cyan)), hsl(var(--infinity-pink)))",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  {icon}
-                </span>
-                <span className="text-xs font-display font-bold tracking-[0.3em] text-foreground/70 group-hover:text-foreground transition-colors duration-300">
-                  {label}
-                </span>
-              </span>
-            </motion.button>
-          </MagneticButton>
-        ))}
+        <MagneticButton strength={0.4}>
+          <button
+            onClick={() => onNavigate("editions")}
+            className="rounded-full px-8 py-3 text-sm font-medium tracking-wide bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+          >
+            EDITIONS
+          </button>
+        </MagneticButton>
+        <MagneticButton strength={0.4}>
+          <button
+            onClick={() => onNavigate("encounter")}
+            className="rounded-full px-8 py-3 text-sm font-medium tracking-wide border border-foreground/20 hover:bg-foreground/10 transition-colors"
+          >
+            ENCOUNTER
+          </button>
+        </MagneticButton>
       </ScrollReveal>
     </section>
     </>
