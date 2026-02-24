@@ -1,12 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { mockCustomers, mockEmailCampaigns, mockConversations } from '@/data/crm-mock';
-import { TrendingUp, Users, MessageCircle, Mail, CalendarIcon } from 'lucide-react';
+import { TrendingUp, Users, MessageCircle, Mail, CalendarIcon, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { format, subDays, subMonths, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -120,6 +122,123 @@ const CRMAnalytics = () => {
     { label: 'Total Revenue', value: `€${filteredCustomers.reduce((a, c) => a + c.totalSpent, 0).toLocaleString()}`, icon: TrendingUp, delta: '+18%' },
   ];
 
+  /* ── Export helpers ── */
+  const buildCSV = useCallback(() => {
+    const rangeLbl = dateRange?.from
+      ? `${format(dateRange.from, 'yyyy-MM-dd')} to ${format(dateRange.to ?? dateRange.from, 'yyyy-MM-dd')}`
+      : 'All time';
+
+    const lines: string[] = [
+      `Infinity Analytics Report`,
+      `Period: ${rangeLbl}`,
+      `Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
+      '',
+      'KPI Metrics',
+      'Metric,Value,Change',
+      ...statCards.map(s => `${s.label},${s.value},${s.delta}`),
+      '',
+      'Customer Growth',
+      'Month,Total,New',
+      ...customerGrowth.map(r => `${r.month},${r.total},${r.new}`),
+      '',
+      'Campaign Performance',
+      'Campaign,Open Rate %,Click Rate %',
+      ...campaignPerformance.map(c => `${c.name},${c.openRate},${c.clickRate}`),
+      '',
+      'Chatbot Resolution',
+      'Status,Count',
+      ...chatbotResolution.map(r => `${r.name},${r.value}`),
+      '',
+      'Customer Segments',
+      'Segment,Count',
+      ...segmentData.map(r => `${r.name},${r.value}`),
+    ];
+    return lines.join('\n');
+  }, [statCards, customerGrowth, campaignPerformance, chatbotResolution, segmentData, dateRange]);
+
+  const downloadFile = useCallback((content: string, filename: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const exportCSV = useCallback(() => {
+    downloadFile(buildCSV(), `analytics-report-${format(new Date(), 'yyyy-MM-dd')}.csv`, 'text/csv');
+    toast.success('CSV report downloaded');
+  }, [buildCSV, downloadFile]);
+
+  const exportPDF = useCallback(() => {
+    const rangeLbl = dateRange?.from
+      ? `${format(dateRange.from, 'MMM d, yyyy')} – ${format(dateRange.to ?? dateRange.from, 'MMM d, yyyy')}`
+      : 'All time';
+
+    const html = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/>
+<title>Analytics Report</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 40px; color: #1a1a1a; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
+  h2 { font-size: 16px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; }
+  th { background: #f5f5f5; font-weight: 600; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+  .kpi { border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
+  .kpi-val { font-size: 20px; font-weight: 700; }
+  .kpi-lbl { font-size: 12px; color: #666; }
+  .kpi-delta { font-size: 11px; color: #16a34a; }
+  @media print { body { padding: 20px; } }
+</style>
+</head><body>
+<h1>Infinity Analytics Report</h1>
+<p class="meta">Period: ${rangeLbl} &nbsp;|&nbsp; Generated: ${format(new Date(), 'MMM d, yyyy HH:mm')}</p>
+
+<h2>Key Metrics</h2>
+<div class="kpi-grid">
+  ${statCards.map(s => `<div class="kpi"><div class="kpi-val">${s.value}</div><div class="kpi-lbl">${s.label}</div><div class="kpi-delta">${s.delta} vs last month</div></div>`).join('')}
+</div>
+
+<h2>Customer Growth</h2>
+<table><tr><th>Month</th><th>Total</th><th>New</th></tr>
+${customerGrowth.map(r => `<tr><td>${r.month}</td><td>${r.total}</td><td>${r.new}</td></tr>`).join('')}
+</table>
+
+<h2>Campaign Performance</h2>
+<table><tr><th>Campaign</th><th>Open %</th><th>Click %</th></tr>
+${campaignPerformance.map(c => `<tr><td>${c.name}</td><td>${c.openRate}%</td><td>${c.clickRate}%</td></tr>`).join('')}
+</table>
+
+<h2>Chatbot Resolution</h2>
+<table><tr><th>Status</th><th>Count</th></tr>
+${chatbotResolution.map(r => `<tr><td>${r.name}</td><td>${r.value}</td></tr>`).join('')}
+</table>
+
+<h2>Customer Segments</h2>
+<table><tr><th>Segment</th><th>Count</th></tr>
+${segmentData.map(r => `<tr><td>${r.name}</td><td>${r.value}</td></tr>`).join('')}
+</table>
+
+<script>window.onload=()=>{window.print()}<\/script>
+</body></html>`;
+
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      toast.success('PDF print dialog opened');
+    } else {
+      toast.error('Pop-up blocked — please allow pop-ups');
+    }
+  }, [statCards, customerGrowth, campaignPerformance, chatbotResolution, segmentData, dateRange]);
+
   return (
     <div className="space-y-6">
       {/* Header + date range */}
@@ -127,6 +246,26 @@ const CRMAnalytics = () => {
         <h1 className="text-2xl font-display font-bold text-foreground">Analytics</h1>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Export dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportCSV} className="gap-2 cursor-pointer">
+                <FileSpreadsheet className="w-4 h-4" />
+                Download as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer">
+                <FileText className="w-4 h-4" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Preset buttons */}
           {presets.map(p => (
             <Button
