@@ -115,57 +115,70 @@ const UnifiedHeroCanvas = ({
       const mx = (mouse.x - 0.5) * 30;
       const my = (mouse.y - 0.5) * 20;
 
-      // ── Draw infinity path layers ──
+      // ── Helper: build infinity path points ──
+      const buildPath = (offset: number): { x: number; y: number }[] => {
+        const pts: { x: number; y: number }[] = [];
+        const steps = 120; // reduced from 200
+        const phase = t * 0.5 + offset;
+        for (let i = 0; i <= steps; i++) {
+          const angle = (i / steps) * Math.PI * 2;
+          const denom = 1 + Math.sin(angle) * Math.sin(angle);
+          let x = (Math.cos(angle) / denom) * scaleX;
+          let y = (Math.sin(angle) * Math.cos(angle) / denom) * scaleY;
+          x += Math.sin(angle * 3 + phase * 4) * 8 * Math.sin(t + offset);
+          y += Math.cos(angle * 2 + phase * 3) * 6 * Math.cos(t * 1.3 + offset);
+          const distFromMouse = Math.hypot((cx + x) / w - mouse.x, (cy + y) / h - mouse.y);
+          const push = Math.max(0, 1 - distFromMouse * 3) * 25;
+          x += mx * push * 0.3;
+          y += my * push * 0.3;
+          pts.push({ x: cx + x, y: cy + y });
+        }
+        return pts;
+      };
+
+      const strokePath = (pts: { x: number; y: number }[], style: string | CanvasGradient, lineWidth: number, alpha: number) => {
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = style;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        for (let i = 0; i < pts.length; i++) {
+          if (i === 0) ctx.moveTo(pts[i].x, pts[i].y);
+          else ctx.lineTo(pts[i].x, pts[i].y);
+        }
+        ctx.stroke();
+      };
+
+      // ── Draw infinity path layers using multi-pass glow (no ctx.filter) ──
       const layers = [
-        { offset: 0, alpha: 0.06, width: 80, blur: 35 },
-        { offset: 0.15, alpha: 0.15, width: 40, blur: 18 },
-        { offset: 0.3, alpha: 0.35, width: 14, blur: 6 },
-        { offset: 0.38, alpha: 0.7, width: 5, blur: 2 },
-        { offset: 0.42, alpha: 1, width: 2.5, blur: 0 },
+        { offset: 0, alpha: 0.06, width: 80 },
+        { offset: 0.15, alpha: 0.15, width: 40 },
+        { offset: 0.3, alpha: 0.35, width: 14 },
+        { offset: 0.38, alpha: 0.7, width: 5 },
+        { offset: 0.42, alpha: 1, width: 2.5 },
       ];
 
       for (const layer of layers) {
-        ctx.save();
-        ctx.globalAlpha = layer.alpha;
-        if (layer.blur > 0) ctx.filter = `blur(${layer.blur}px)`;
-
-        const grad = ctx.createLinearGradient(cx - scaleX, cy, cx + scaleX, cy);
+        const pts = buildPath(layer.offset);
         const hue1 = (t * 40 + layer.offset * 360) % 360;
         const hue2 = (hue1 + 60) % 360;
         const hue3 = (hue1 + 180) % 360;
         const hue4 = (hue1 + 270) % 360;
+        const grad = ctx.createLinearGradient(cx - scaleX, cy, cx + scaleX, cy);
         grad.addColorStop(0, `hsl(${hue1}, 90%, 70%)`);
         grad.addColorStop(0.3, `hsl(${hue2}, 95%, 65%)`);
         grad.addColorStop(0.6, `hsl(${hue3}, 90%, 70%)`);
         grad.addColorStop(1, `hsl(${hue4}, 95%, 65%)`);
 
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = layer.width;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-
-        ctx.beginPath();
-        const steps = 200;
-        for (let i = 0; i <= steps; i++) {
-          const angle = (i / steps) * Math.PI * 2;
-          const phase = t * 0.5 + layer.offset;
-          const denom = 1 + Math.sin(angle) * Math.sin(angle);
-          let x = (Math.cos(angle) / denom) * scaleX;
-          let y = (Math.sin(angle) * Math.cos(angle) / denom) * scaleY;
-          x += Math.sin(angle * 3 + phase * 4) * 8 * Math.sin(t + layer.offset);
-          y += Math.cos(angle * 2 + phase * 3) * 6 * Math.cos(t * 1.3 + layer.offset);
-
-          const distFromMouse = Math.hypot((cx + x) / w - mouse.x, (cy + y) / h - mouse.y);
-          const push = Math.max(0, 1 - distFromMouse * 3) * 25;
-          x += mx * push * 0.3;
-          y += my * push * 0.3;
-
-          if (i === 0) ctx.moveTo(cx + x, cy + y);
-          else ctx.lineTo(cx + x, cy + y);
+        // Simulate glow with wider, dimmer passes
+        if (layer.width >= 14) {
+          strokePath(pts, grad, layer.width * 2, layer.alpha * 0.15);
+          strokePath(pts, grad, layer.width * 1.4, layer.alpha * 0.3);
         }
-        ctx.stroke();
-        ctx.restore();
+        strokePath(pts, grad, layer.width, layer.alpha);
       }
+      ctx.globalAlpha = 1;
 
       // ── Check if mouse is near infinity path ──
       const mousePixelX = mouse.x * w;
@@ -232,30 +245,30 @@ const UnifiedHeroCanvas = ({
         }
       }
 
-      // ── Draw all particles ──
+      // ── Draw all particles — no shadowBlur for performance ──
       for (const p of particlesRef.current) {
         p.hue = (p.hue + 0.3) % 360;
 
         if (p.mode === "path") {
-          // Move along infinity path
           p.pathAngle += 0.02;
           const pos = getInfinityPos(p.pathAngle + t * 1.5, t, cx, cy, scaleX, scaleY);
           p.x = pos.x;
           p.y = pos.y;
 
           const alpha = 0.4 + Math.sin(t * 2 + p.pathAngle * 3) * 0.3;
-          ctx.save();
+          const color = `hsl(${p.hue}, 90%, 70%)`;
+          // Glow via larger circle
+          ctx.globalAlpha = alpha * 0.2;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+          ctx.fill();
+          // Core
           ctx.globalAlpha = alpha;
-          ctx.fillStyle = `hsl(${p.hue}, 90%, 70%)`;
-          ctx.shadowColor = `hsl(${p.hue}, 90%, 70%)`;
-          ctx.shadowBlur = 15;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
-          ctx.restore();
         } else {
-          // Free floating particle
-          // Mouse repulsion
           const dx = p.x / w - mouse.x;
           const dy = p.y / h - mouse.y;
           const dist = Math.hypot(dx, dy);
@@ -272,23 +285,26 @@ const UnifiedHeroCanvas = ({
           p.life = (Math.sin(t * 10 + p.hue * 0.01) + 1) / 2;
           if (p.throwTimer > 0) p.throwTimer--;
 
-          // Wrap around
           if (p.x < 0) p.x = w;
           if (p.x > w) p.x = 0;
           if (p.y < 0) p.y = h;
           if (p.y > h) p.y = 0;
 
-          ctx.save();
+          const color = `hsl(${p.hue}, 80%, 65%)`;
+          // Glow
+          ctx.globalAlpha = (0.3 + p.life * 0.4) * 0.2;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          // Core
           ctx.globalAlpha = 0.3 + p.life * 0.4;
-          ctx.fillStyle = `hsl(${p.hue}, 80%, 65%)`;
-          ctx.shadowColor = `hsl(${p.hue}, 80%, 65%)`;
-          ctx.shadowBlur = 10;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
-          ctx.restore();
         }
       }
+      ctx.globalAlpha = 1;
 
       animRef.current = requestAnimationFrame(draw);
     };
