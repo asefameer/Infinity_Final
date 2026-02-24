@@ -9,16 +9,19 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-  { label: 'Products', icon: ShoppingBag, path: '/admin/products' },
-  { label: 'Events & Tickets', icon: CalendarDays, path: '/admin/events' },
-  { label: 'Banners & Media', icon: Image, path: '/admin/banners' },
-  { label: 'Discounts', icon: Tag, path: '/admin/discounts' },
-  { label: 'Customers', icon: Users, path: '/admin/crm/customers' },
-  { label: 'Chatbot', icon: MessageCircle, path: '/admin/crm/chatbot' },
-  { label: 'Messaging', icon: Mail, path: '/admin/crm/messaging' },
-  { label: 'Analytics', icon: BarChart3, path: '/admin/crm/analytics' },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin', badge: 0 },
+  { label: 'Products', icon: ShoppingBag, path: '/admin/products', badge: 0 },
+  { label: 'Events & Tickets', icon: CalendarDays, path: '/admin/events', badge: 0 },
+  { label: 'Banners & Media', icon: Image, path: '/admin/banners', badge: 0 },
+  { label: 'Discounts', icon: Tag, path: '/admin/discounts', badge: 0 },
+  { label: 'Customers', icon: Users, path: '/admin/crm/customers', badge: 0 },
+  { label: 'Chatbot', icon: MessageCircle, path: '/admin/crm/chatbot', badge: 3 },
+  { label: 'Messaging', icon: Mail, path: '/admin/crm/messaging', badge: 0 },
+  { label: 'Analytics', icon: BarChart3, path: '/admin/crm/analytics', badge: 0 },
 ];
+
+// Mock: new order count for Dashboard badge
+const DASHBOARD_BADGE = 5;
 
 const AdminLayout = () => {
   const { isAuthenticated, user, logout } = useAdminAuth();
@@ -52,19 +55,36 @@ const AdminLayout = () => {
         <nav className="flex-1 py-4 space-y-1 px-2">
           {navItems.map(item => {
             const active = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+            const badgeCount = item.path === '/admin' ? DASHBOARD_BADGE : item.badge;
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative',
                   active
                     ? 'bg-primary/10 text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
-                <item.icon className="w-5 h-5 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                <span className="relative shrink-0">
+                  <item.icon className="w-5 h-5" />
+                  {badgeCount > 0 && collapsed && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </span>
+                  )}
+                </span>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1">{item.label}</span>
+                    {badgeCount > 0 && (
+                      <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold leading-none">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
+                  </>
+                )}
               </Link>
             );
           })}
