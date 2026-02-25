@@ -77,8 +77,8 @@ const ProductDetail = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleAddToCart} className="flex-1 rounded-full py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity">{added ? '✓ Added!' : 'Add to Cart'}</button>
-              <button className="w-12 h-12 rounded-full border border-border/40 flex items-center justify-center hover:bg-muted/50 transition-colors" aria-label="Add to wishlist"><Heart className="w-5 h-5" /></button>
+              <button onClick={handleAddToCart} className="flex-1 btn-infinity rounded-full py-3 text-sm font-medium bg-background/80 text-foreground transition-all">{added ? '✓ Added!' : 'Add to Cart'}</button>
+              <button className="w-12 h-12 btn-infinity rounded-full flex items-center justify-center transition-all bg-background/80" aria-label="Add to wishlist"><Heart className="w-5 h-5" /></button>
             </div>
             {[
               { id: 'description', title: 'Description', content: product.description },

@@ -80,7 +80,7 @@ const BrandPage = () => {
               <Link
                 key={rb.id}
                 to={`/the-trinity/${rb.id}`}
-                className="inline-flex items-center gap-2 rounded-full border border-border/40 px-6 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+                className="inline-flex items-center gap-2 btn-infinity rounded-full px-6 py-3 text-sm font-medium bg-background/80 text-foreground transition-all"
               >
                 {rb.name}
                 <ArrowRight className="w-4 h-4" />

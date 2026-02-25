@@ -101,7 +101,7 @@ const PromoCodeInput = ({ appliesTo, subtotal, onApply, onRemove, appliedCode }:
         <button
           onClick={handleApply}
           disabled={loading || !input.trim()}
-          className="rounded-full px-5 py-2 text-sm font-medium border border-border/40 hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="btn-infinity rounded-full px-5 py-2 text-sm font-medium bg-background/80 text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
         </button>

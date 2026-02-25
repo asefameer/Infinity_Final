@@ -102,7 +102,7 @@ const CartPage = () => {
 
             <Link
               to="/checkout"
-              className="block w-full text-center rounded-full py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="block w-full text-center btn-infinity rounded-full py-3 text-sm font-medium bg-background/80 text-foreground transition-all"
             >
               Proceed to Checkout
             </Link>

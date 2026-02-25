@@ -37,7 +37,7 @@ const NewsletterModule = ({ variant = 'section' }: NewsletterModuleProps) => {
             <MagneticButton strength={0.2}>
               <button
                 type="submit"
-                className="rounded-full px-5 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-2"
+                className="btn-infinity rounded-full px-5 py-2.5 text-sm font-medium bg-background/80 text-foreground transition-all flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 Join
@@ -78,7 +78,7 @@ const NewsletterModule = ({ variant = 'section' }: NewsletterModuleProps) => {
             <MagneticButton strength={0.2}>
               <button
                 type="submit"
-                className="rounded-full px-8 py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                className="btn-infinity rounded-full px-8 py-3 text-sm font-medium bg-background/80 text-foreground transition-all"
               >
                 Subscribe
               </button>

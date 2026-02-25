@@ -129,3 +129,35 @@
   75% { background-position: -32px -32px; }
   100% { background-position: 64px 64px; }
 }
+
+/* Infinity glassmorphic button */
+.btn-infinity {
+  position: relative;
+  isolation: isolate;
+}
+.btn-infinity::before,
+.btn-infinity::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, hsl(var(--infinity-cyan)), hsl(var(--infinity-purple)), hsl(var(--infinity-pink)), hsl(var(--infinity-cyan)));
+  background-size: 300% 300%;
+  animation: gradient-shift 3s ease infinite;
+  z-index: -1;
+}
+.btn-infinity::before {
+  opacity: 0.2;
+  transition: opacity 0.3s;
+}
+.btn-infinity::after {
+  filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.btn-infinity:hover::before {
+  opacity: 0.9;
+}
+.btn-infinity:hover::after {
+  opacity: 0.7;
+}

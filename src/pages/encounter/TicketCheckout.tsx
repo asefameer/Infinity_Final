@@ -73,7 +73,7 @@ const TicketCheckout = () => {
               <span className="text-sm font-medium capitalize">{m === 'card' ? 'Credit/Debit Card' : m}</span>
             </label>
           ))}
-          <button onClick={handleConfirm} className="w-full rounded-full py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity mt-4">Confirm Purchase</button>
+          <button onClick={handleConfirm} className="w-full btn-infinity rounded-full py-3 text-sm font-medium bg-background/80 text-foreground transition-all mt-4">Confirm Purchase</button>
         </div>
       </div>
     </>

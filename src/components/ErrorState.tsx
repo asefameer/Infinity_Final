@@ -28,7 +28,7 @@ const ErrorState = ({
     {onRetry && (
       <button
         onClick={onRetry}
-        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+        className="inline-flex items-center gap-2 btn-infinity rounded-full px-6 py-2.5 text-sm font-medium bg-background/80 text-foreground transition-all"
       >
         <RefreshCw className="w-4 h-4" />
         Try Again
