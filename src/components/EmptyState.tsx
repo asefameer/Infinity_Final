@@ -27,7 +27,7 @@ const EmptyState = ({ icon, title, description, actionLabel, actionLink }: Empty
       <MagneticButton strength={0.2}>
         <Link
           to={actionLink}
-          className="rounded-full px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+          className="btn-infinity rounded-full px-6 py-2.5 text-sm font-medium bg-background/80 text-foreground transition-all"
         >
           {actionLabel}
         </Link>

@@ -94,7 +94,7 @@ const EventDetail = () => {
             {totalTickets > 0 && (
               <div className="pt-2 border-t border-border/30 space-y-2">
                 <div className="flex justify-between text-sm font-semibold"><span>{totalTickets} ticket{totalTickets > 1 ? 's' : ''}</span><span>৳{totalPrice.toLocaleString()}</span></div>
-                <Link to={`/encounter/checkout/${event.id}?tiers=${encodeURIComponent(JSON.stringify(tierQty))}`} className="block w-full text-center rounded-full py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Buy Tickets</Link>
+                <Link to={`/encounter/checkout/${event.id}?tiers=${encodeURIComponent(JSON.stringify(tierQty))}`} className="block w-full text-center btn-infinity rounded-full py-3 text-sm font-medium bg-background/80 text-foreground transition-all">Buy Tickets</Link>
               </div>
             )}
           </div>

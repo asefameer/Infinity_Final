@@ -128,7 +128,7 @@ const Checkout = () => {
               <input placeholder="Full Name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full rounded-lg border border-border/40 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
               <input placeholder="Email" type="email" value={form.email} onChange={e => update('email', e.target.value)} className="w-full rounded-lg border border-border/40 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
               <input placeholder="Phone" value={form.phone} onChange={e => update('phone', e.target.value)} className="w-full rounded-lg border border-border/40 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              <button onClick={() => setStep(1)} className="rounded-full px-8 py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Continue to Shipping</button>
+              <button onClick={() => setStep(1)} className="btn-infinity rounded-full px-8 py-3 text-sm font-medium bg-background/80 text-foreground transition-all">Continue to Shipping</button>
             </div>
           )}
 
@@ -142,7 +142,7 @@ const Checkout = () => {
                 <input placeholder="District" value={form.district} onChange={e => update('district', e.target.value)} className="rounded-lg border border-border/40 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </div>
               <input placeholder="Postal Code" value={form.postalCode} onChange={e => update('postalCode', e.target.value)} className="w-full rounded-lg border border-border/40 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              <button onClick={() => setStep(2)} className="rounded-full px-8 py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Continue to Payment</button>
+              <button onClick={() => setStep(2)} className="btn-infinity rounded-full px-8 py-3 text-sm font-medium bg-background/80 text-foreground transition-all">Continue to Payment</button>
             </div>
           )}
 
@@ -155,7 +155,7 @@ const Checkout = () => {
                   <span className="text-sm font-medium capitalize">{method === 'cod' ? 'Cash on Delivery' : method === 'card' ? 'Credit/Debit Card' : method}</span>
                 </label>
               ))}
-              <button onClick={() => setStep(3)} className="rounded-full px-8 py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity">Review Order</button>
+              <button onClick={() => setStep(3)} className="btn-infinity rounded-full px-8 py-3 text-sm font-medium bg-background/80 text-foreground transition-all">Review Order</button>
             </div>
           )}
 
@@ -195,7 +195,7 @@ const Checkout = () => {
               <button
                 onClick={handlePlaceOrder}
                 disabled={createOrder.isPending}
-                className="w-full rounded-full py-3 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full btn-infinity rounded-full py-3 text-sm font-medium bg-background/80 text-foreground transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {createOrder.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 {createOrder.isPending ? 'Placing Order…' : 'Place Order'}
