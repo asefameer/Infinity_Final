@@ -159,15 +159,16 @@ const UnifiedHeroCanvas = ({
       const pts = buildPath(0);
       
       // Dynamic gradient
-      const hue1 = (t * 40) % 360;
-      const hue2 = (hue1 + 60) % 360;
+      const hue1 = (t * 55) % 360;
+      const hue2 = (hue1 + 90) % 360;
       const hue3 = (hue1 + 180) % 360;
       const hue4 = (hue1 + 270) % 360;
       const grad = ctx.createLinearGradient(cx - scaleX, cy, cx + scaleX, cy);
-      grad.addColorStop(0, `hsl(${hue1}, 90%, 70%)`);
-      grad.addColorStop(0.3, `hsl(${hue2}, 95%, 65%)`);
-      grad.addColorStop(0.6, `hsl(${hue3}, 90%, 70%)`);
-      grad.addColorStop(1, `hsl(${hue4}, 95%, 65%)`);
+      grad.addColorStop(0, `hsl(${hue1}, 100%, 72%)`);
+      grad.addColorStop(0.25, `hsl(${hue2}, 100%, 68%)`);
+      grad.addColorStop(0.5, `hsl(${hue3}, 100%, 72%)`);
+      grad.addColorStop(0.75, `hsl(${hue4}, 100%, 68%)`);
+      grad.addColorStop(1, `hsl(${hue1}, 100%, 72%)`);
 
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
