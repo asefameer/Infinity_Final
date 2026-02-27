@@ -47,7 +47,7 @@ const TicketCheckout = () => {
             <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
             {promoDiscount > 0 && (
               <div className="flex justify-between text-sm text-primary">
-                <span>Discount ({appliedPromo!.type === 'percentage' ? `${appliedPromo!.value}%` : `৳${appliedPromo!.value}`})</span>
+                <span>Discount ({appliedPromo!.type === 'percentage' ? `${appliedPromo!.value}%` : `BDT${appliedPromo!.value}`})</span>
                 <span>-৳{promoDiscount.toLocaleString()}</span>
               </div>
             )}
