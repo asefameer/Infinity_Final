@@ -19,11 +19,14 @@ jobs:
           cache: 'npm'
 
       - name: Install and Build
+        # If you have secrets in your code, add them here as env
+        # env:
+        #   VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           npm install
           npm run build
 
-      # We now zip ONLY the contents of the dist folder
+      # Zipping just the dist contents is correct for App Service
       - name: Zip artifact for deployment
         run: |
           cd dist
@@ -38,6 +41,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    # Environment allows you to track deployments in GitHub
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -45,6 +53,7 @@ jobs:
           name: node-app
 
       - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'infinity-portal-app-prod-001'
