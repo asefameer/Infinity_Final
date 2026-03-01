@@ -68,7 +68,7 @@
     "three": "^0.160.1",
     "vaul": "^0.9.9",
     "zod": "^3.25.76",
-    "applicationinsights": "^2.10.0"
+    "@microsoft/applicationinsights-web": "^3.3.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
