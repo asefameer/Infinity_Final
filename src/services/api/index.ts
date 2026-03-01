@@ -13,10 +13,17 @@
  * DELETE /api/products/:id      → productStore.delete()
  * (same pattern for events, discounts, banners, customers, etc.)
  */
-import * as appInsights from 'applicationinsights';
+// Replace the old import with this:
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 
-// This reads the connection string we set in your Grand Master main.tf
-appInsights.setup().start();
+const appInsights = new ApplicationInsights({ 
+  config: {
+    connectionString: 'InstrumentationKey=72b9d2ff-c31c-4828-b32b-424d88cd9c80;IngestionEndpoint=https://southeastasia-1.in.applicationinsights.azure.com/;LiveEndpoint=https://southeastasia.livediagnostics.monitor.azure.com/;ApplicationId=e3c50dd7-a367-4c9f-bfe6-1e64a807b480'
+  } 
+});
+
+appInsights.loadAppInsights();
+appInsights.trackPageView();
 
 import { API_CONFIG } from './config';
 import { httpClient } from './http-client';
