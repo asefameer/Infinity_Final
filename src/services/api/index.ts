@@ -13,6 +13,11 @@
  * DELETE /api/products/:id      → productStore.delete()
  * (same pattern for events, discounts, banners, customers, etc.)
  */
+import * as appInsights from 'applicationinsights';
+
+// This reads the connection string we set in your Grand Master main.tf
+appInsights.setup().start();
+
 import { API_CONFIG } from './config';
 import { httpClient } from './http-client';
 import {
