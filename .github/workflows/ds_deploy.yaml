@@ -1,0 +1,158 @@
+name: Build and deploy Node.js app to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      deployment_strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'direct'
+        type: choice
+        options:
+          - direct
+          - swap
+
+env:
+  NODE_VERSION: '20.x'
+  PROD_WEBAPP_NAME: 'infinity-portal-app-prod-001'
+  STAGING_WEBAPP_NAME: 'infinity-portal-app-staging-001'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build_id.outputs.build_id }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate build ID
+        id: build_id
+        run: echo "build_id=$(date +'%Y%m%d%H%M%S')-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Build application
+        run: npm run build --if-present
+        env:
+          VITE_API_URL: ${{ secrets[format('VITE_API_URL_{0}', github.event.inputs.environment || 'staging')] }}
+          VITE_APPINSIGHTS_KEY: ${{ secrets.VITE_APPINSIGHTS_KEY }}
+
+      - name: Prepare deployment package
+        run: |
+          cd dist && zip -r ../release-${{ steps.build_id.outputs.build_id }}.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build-${{ steps.build_id.outputs.build_id }}
+          path: release-${{ steps.build_id.outputs.build_id }}.zip
+          retention-days: 30
+
+  deploy-to-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event.inputs.environment != 'production' || github.event_name == 'pull_request'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ needs.build.outputs.build_id }}
+
+      - name: Deploy to staging slot
+        id: deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.STAGING_WEBAPP_NAME }}
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
+          package: release-${{ needs.build.outputs.build_id }}.zip
+
+      - name: Run smoke tests
+        run: |
+          sleep 15
+          curl -f ${{ steps.deploy.outputs.webapp-url }}/health || exit 1
+
+  promote-to-production:
+    runs-on: ubuntu-latest
+    needs: [build, deploy-to-staging]
+    if: github.event.inputs.environment == 'production' && github.event.inputs.deployment_strategy == 'swap'
+    environment:
+      name: production
+      url: https://infinitybd.live
+    
+    steps:
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap staging to production
+        run: |
+          az webapp deployment slot swap \
+            --name ${{ env.PROD_WEBAPP_NAME }} \
+            --resource-group rg-portal-app-prod \
+            --slot staging \
+            --target-slot production
+
+      - name: Verify production
+        run: |
+          sleep 30
+          curl -f https://infinitybd.live/health || exit 1
+
+  direct-deploy-production:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event.inputs.environment == 'production' && github.event.inputs.deployment_strategy == 'direct'
+    environment:
+      name: production
+      url: https://infinitybd.live
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ needs.build.outputs.build_id }}
+
+      - name: Deploy to production
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.PROD_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: release-${{ needs.build.outputs.build_id }}.zip
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://infinitybd.live/health || exit 1
